@@ -12,13 +12,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     (async () => {
       const sessionData = await getSessionInfo();
+  
       if (sessionData?.user) {
         setUser(sessionData.user);
         setRememberedEmail(sessionData.user.email);
+      } else {
+        setUser(null); 
       }
+  
       setLoading(false);
     })();
   }, []);
+  
 
   const biometricLogin = async () => {
     const auth = await LocalAuthentication.authenticateAsync();
