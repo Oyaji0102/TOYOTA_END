@@ -41,7 +41,7 @@ export const LobbyProvider = ({ children }) => {
       setSocket(null);
     }
 
-    const url = `ws://192.168.29.136:4000/lobby/${lobbyId}`;
+    const url = `ws://192.168.103.136:4000/lobby/${lobbyId}`;
     const ws = new WebSocket(url);
 
     ws.onopen = () => {

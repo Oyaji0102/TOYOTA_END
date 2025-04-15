@@ -1,10 +1,21 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, Modal, TouchableOpacity, Button, StyleSheet, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
+  TextInput,
+  Platform,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { LobbyContext } from '../context/LobbyContext';
 import { GameContext } from '../context/GameContext';
+import { useTheme } from '../context/ThemeContext';
 import { getGames } from '../src/api';
+import { Feather } from '@expo/vector-icons';
+import { sendLocalNotification } from '../components/notifications';
 
 const LobbyModal = () => {
   const {
@@ -22,46 +33,33 @@ const LobbyModal = () => {
     lobbyPassword,
     setLobbyPassword,
     skipGameSelection,
-    setSkipGameSelection
+    setSkipGameSelection,
   } = useContext(LobbyContext);
 
+  const { selectedGame, setSelectedGame } = useContext(GameContext);
+  const { theme } = useTheme();
+
   const [games, setGames] = useState([]);
-  const [loadingGames, setLoadingGames] = useState(true);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  
-  const { selectedGame, setSelectedGame } = useContext(GameContext);
-
 
   useEffect(() => {
-    getGames()
-      .then((data) => {
-        setGames(data);
-        setLoadingGames(false);
-      })
-      .catch((err) => {
-        console.error("Oyunlar alınamadı:", err);
-        setLoadingGames(false);
-      });
+    getGames().then(setGames).catch(console.error);
   }, []);
 
   const onChangeStart = (event, selectedDate) => {
-    setShowStartPicker(false);
+    setShowStartPicker(Platform.OS === 'ios');
     if (selectedDate) setEventStartDate(selectedDate);
   };
 
   const onChangeEnd = (event, selectedDate) => {
-    setShowEndPicker(false);
+    setShowEndPicker(Platform.OS === 'ios');
     if (selectedDate) setEventEndDate(selectedDate);
   };
 
-  const getGameObj = () => {
-    if (!selectedGame) return null;
-    if (typeof selectedGame === 'object') return selectedGame;
-    return games.find(g => g.id === selectedGame) || null;
-  };
-
-  const selectedGameObj = getGameObj();
+  const selectedGameObj = typeof selectedGame === 'object'
+    ? selectedGame
+    : games.find(g => g.id === selectedGame);
 
   return (
     <Modal
@@ -74,64 +72,62 @@ const LobbyModal = () => {
       }}
     >
       <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <Text style={styles.title}>Lobi Türü Seç</Text>
+        <View style={[styles.modal, { backgroundColor: theme.surface, shadowColor: theme.shadow }]}>
+          <Text style={[styles.title, { color: theme.text }]}>Lobi Türü Seç</Text>
 
-          <TouchableOpacity onPress={() => setLobbyType('normal')}>
-            <Text style={lobbyType === 'normal' ? styles.radioSelected : styles.radioUnselected}>
-              🔘 Normal Lobi
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setLobbyType('event')}>
-            <Text style={lobbyType === 'event' ? styles.radioSelected : styles.radioUnselected}>
-              🔘 Etkinlik Lobisi
-            </Text>
-          </TouchableOpacity>
+          {['normal', 'event'].map(type => (
+            <TouchableOpacity
+              key={type}
+              onPress={() => setLobbyType(type)}
+              style={styles.radioOption}
+            >
+              <Feather
+                name={lobbyType === type ? 'check-circle' : 'circle'}
+                size={20}
+                color={theme.primary}
+                style={{ marginRight: 8 }}
+              />
+              <Text style={{ color: theme.text }}>{type === 'normal' ? 'Normal Lobi' : 'Etkinlik Lobisi'}</Text>
+            </TouchableOpacity>
+          ))}
 
           {lobbyType === 'event' && (
             <View style={styles.dateSection}>
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartPicker(true)}>
-                <Text>📅 Başlangıç: {eventStartDate.toLocaleDateString()}</Text>
+              <TouchableOpacity
+                style={[styles.dateButton, { backgroundColor: theme.input }]}
+                onPress={() => setShowStartPicker(true)}
+              >
+                <View style={styles.rowCenter}>
+                  <Feather name="calendar" size={18} color={theme.text} style={{ marginRight: 6 }} />
+                  <Text style={{ color: theme.text }}>Başlangıç: {eventStartDate.toLocaleDateString()}</Text>
+                </View>
               </TouchableOpacity>
               {showStartPicker && (
-                <DateTimePicker
-                  value={eventStartDate}
-                  mode="date"
-                  display="default"
-                  onChange={onChangeStart}
-                />
+                <DateTimePicker value={eventStartDate} mode="date" display="default" onChange={onChangeStart} />
               )}
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndPicker(true)}>
-                <Text>📅 Bitiş: {eventEndDate.toLocaleDateString()}</Text>
+
+              <TouchableOpacity
+                style={[styles.dateButton, { backgroundColor: theme.input }]}
+                onPress={() => setShowEndPicker(true)}
+              >
+                <View style={styles.rowCenter}>
+                  <Feather name="calendar" size={18} color={theme.text} style={{ marginRight: 6 }} />
+                  <Text style={{ color: theme.text }}>Bitiş: {eventEndDate.toLocaleDateString()}</Text>
+                </View>
               </TouchableOpacity>
               {showEndPicker && (
-                <DateTimePicker
-                  value={eventEndDate}
-                  mode="date"
-                  display="default"
-                  onChange={onChangeEnd}
-                />
+                <DateTimePicker value={eventEndDate} mode="date" display="default" onChange={onChangeEnd} />
               )}
             </View>
           )}
 
-          {selectedGameObj && skipGameSelection ? (
-            <View style={{ padding: 10, backgroundColor: '#e3e3e3', borderRadius: 8 }}>
-              <Text style={{ fontWeight: 'bold' }}>
-                🎮 Seçilen Oyun: {selectedGameObj.name}
-              </Text>
-            </View>
-          ) : (
+          {!skipGameSelection && (
             <>
-              <Text style={{ marginTop: 15, fontWeight: 'bold' }}>🎮 Oyun Seç</Text>
+              <Text style={[styles.subTitle, { color: theme.text }]}>🎮 Oyun Seç</Text>
               <Picker
                 selectedValue={selectedGameObj?.id || null}
-                onValueChange={(value) => {
-                  const foundGame = games.find(g => g.id === value);
-                  setSelectedGame(foundGame || null);
-                }}
-                style={{ backgroundColor: '#eee', marginVertical: 10 }}
+                onValueChange={(value) => setSelectedGame(games.find(g => g.id === value) || null)}
+                style={{ backgroundColor: theme.input, marginVertical: 10, color: theme.text }}
               >
                 <Picker.Item label="Bir oyun seçin..." value={null} />
                 {games.map(game => (
@@ -141,29 +137,56 @@ const LobbyModal = () => {
             </>
           )}
 
-          <View style={{ marginBottom: 20 }}>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}
-              onPress={() => setIsPrivate(!isPrivate)}
-            >
-              <Text style={{ fontSize: 16 }}>{isPrivate ? '✅' : '⬜️'} 🔒 Şifreli Lobi</Text>
-            </TouchableOpacity>
-            {isPrivate && (
-              <View style={{ backgroundColor: '#eee', padding: 10, borderRadius: 8 }}>
-                <Text>Şifre:</Text>
-                <TextInput
-                  secureTextEntry
-                  style={styles.passwordInput}
-                  value={lobbyPassword}
-                  onChangeText={setLobbyPassword}
-                  placeholder="Lobi şifresi girin"
-                />
-              </View>
-            )}
-          </View>
+          {skipGameSelection && selectedGameObj && (
+            <View style={[styles.selectedGameBox, { backgroundColor: theme.input }]}>
+              <Text style={[styles.boldText, { color: theme.text }]}>🎮 Seçilen Oyun: {selectedGameObj.name}</Text>
+            </View>
+          )}
 
-          <Button title="İleri" onPress={() => handleLobbyNext(selectedGame, skipGameSelection)} />
+          <TouchableOpacity style={styles.radioOption} onPress={() => setIsPrivate(!isPrivate)}>
+            <Feather
+              name={isPrivate ? 'check-square' : 'square'}
+              size={20}
+              color={theme.primary}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={{ fontSize: 16, color: theme.text }}>Şifreli Lobi</Text>
+          </TouchableOpacity>
+          {isPrivate && (
+            <View style={{ backgroundColor: theme.input, padding: 10, borderRadius: 8 }}>
+              <Text style={{ color: theme.text }}>Şifre:</Text>
+              <TextInput
+                secureTextEntry
+                style={[styles.passwordInput, {
+                  backgroundColor: theme.surface,
+                  color: theme.text,
+                  borderColor: theme.border
+                }]}
+                value={lobbyPassword}
+                onChangeText={setLobbyPassword}
+                placeholder="Lobi şifresi girin"
+                placeholderTextColor={theme.placeholder}
+              />
+            </View>
+          )}
 
+<TouchableOpacity
+  onPress={() => {
+    handleLobbyNext(selectedGame, skipGameSelection);
+    sendLocalNotification(
+      '🎯 Lobi Ayarlandı',
+      selectedGame ? `${selectedGame.name} için lobi kuruluyor...` : 'Lobi kuruluyor...'
+    );
+  }}
+  style={[
+    styles.dateButton,
+    { backgroundColor: theme.primary, alignItems: 'center', marginTop: 20 }
+  ]}
+>
+  <Text style={{ color: '#fff', fontWeight: 'bold' }}>İleri</Text>
+</TouchableOpacity>
+
+          
         </View>
       </View>
     </Modal>
@@ -178,44 +201,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modal: {
-    width: '85%',
-    backgroundColor: '#fff',
+    width: '90%',
     padding: 25,
-    borderRadius: 12,
+    borderRadius: 14,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
     elevation: 10,
   },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 16,
+    fontFamily: 'Orbitron-Bold',
+    textAlign: 'center',
   },
-  radioSelected: {
+  subTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 10,
+    marginTop: 15,
+    marginBottom: 6,
   },
-  radioUnselected: {
-    fontSize: 16,
-    color: '#555',
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
   },
   dateSection: {
     marginVertical: 20,
   },
   dateButton: {
-    backgroundColor: '#ddd',
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     marginBottom: 10,
   },
+  rowCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   passwordInput: {
-    backgroundColor: '#fff',
     padding: 8,
     borderRadius: 6,
-    borderColor: '#ccc',
     borderWidth: 1,
-    marginTop: 5
+    marginTop: 6,
+  },
+  selectedGameBox: {
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  boldText: {
+    fontWeight: 'bold',
   },
 });
 

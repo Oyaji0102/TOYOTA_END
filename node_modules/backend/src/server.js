@@ -9,7 +9,7 @@ const gamesRouter = require('./routes/games');
 const app = express();
 
 app.use(cors({
-  origin: ["http://192.168.29.136:8081", "http://localhost:8081"],
+  origin: ["http://192.168.103.136:8081", "http://localhost:8081"],
   credentials: true,
 }));
 

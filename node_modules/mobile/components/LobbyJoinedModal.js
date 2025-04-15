@@ -1,7 +1,17 @@
 import React, { useContext } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, Linking, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  FlatList,
+} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import { Feather } from '@expo/vector-icons';
 import { LobbyContext } from '../context/LobbyContext';
+import { useTheme } from '../context/ThemeContext';
 import { sendLocalNotification } from './notifications';
 
 const LobbyJoinedModal = () => {
@@ -11,9 +21,11 @@ const LobbyJoinedModal = () => {
     joinedLobby,
   } = useContext(LobbyContext);
 
-  if (!lobbyJoinedModalVisible || !joinedLobby) return null; // ⚠️ dışarıdan görünme engeli
+  const { theme } = useTheme();
 
-  const lobbyURL = `ws://192.168.29.136:4000/lobby/${joinedLobby.id}`; // kendi IP'ne göre ayarla
+  if (!lobbyJoinedModalVisible || !joinedLobby) return null;
+
+  const lobbyURL = `ws://192.168.103.136:4000/lobby/${joinedLobby.id}`;
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(lobbyURL);
@@ -36,36 +48,41 @@ const LobbyJoinedModal = () => {
       onRequestClose={() => setLobbyJoinedModalVisible(false)}
     >
       <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <Text style={styles.title}>✅ Lobiye Katıldınız!</Text>
+        <View style={[styles.modal, { backgroundColor: theme.surface, shadowColor: theme.shadow }]}>
+          <Text style={[styles.title, { color: theme.text }]}>✅ Lobiye Katıldınız!</Text>
 
-          <Text style={styles.label}>Lobi ID:</Text>
-          <Text style={styles.value}>{joinedLobby.id}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Lobi ID:</Text>
+          <Text style={[styles.value, { color: theme.text }]}>{joinedLobby.id}</Text>
 
-          <Text style={styles.label}>Bağlantı:</Text>
-          <View style={styles.panoContainer}>
-  <TouchableOpacity onPress={handleOpenURL}>
-    <Text style={styles.urlText}>{lobbyURL}</Text>
-  </TouchableOpacity>
+          <Text style={[styles.label, { color: theme.text }]}>Bağlantı:</Text>
+          <View style={[styles.panoContainer, { backgroundColor: theme.input, borderColor: theme.border }]}>
+            <TouchableOpacity onPress={handleOpenURL}>
+              <Text style={[styles.urlText, { color: theme.primary }]}>{lobbyURL}</Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
-    <Text style={styles.copyButtonText}>📋 Kopyala</Text>
-  </TouchableOpacity>
-</View>
+            <TouchableOpacity style={[styles.copyButton, { backgroundColor: theme.primary }]} onPress={handleCopy}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Feather name="copy" size={16} color="#fff" style={{ marginRight: 6 }} />
+                <Text style={styles.copyButtonText}>Kopyala</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
 
-
-          <Text style={styles.label}>Katılımcılar:</Text>
+          <Text style={[styles.label, { color: theme.text }]}>Katılımcılar:</Text>
           <FlatList
             data={joinedLobby.members}
             keyExtractor={(item, index) => `${item.id}_${index}`}
             renderItem={({ item }) => (
-              <Text style={styles.member}>👤 {item.email}</Text>
+              <View style={styles.memberRow}>
+                <Feather name="user" size={16} color={theme.text} style={{ marginRight: 6 }} />
+                <Text style={[styles.member, { color: theme.text }]}>{item.email}</Text>
+              </View>
             )}
-            style={{ maxHeight: 100 }}
+            style={{ maxHeight: 100, marginBottom: 10 }}
           />
 
           <TouchableOpacity
-            style={styles.closeButton}
+            style={[styles.closeButton, { backgroundColor: theme.border }]}
             onPress={() => setLobbyJoinedModalVisible(false)}
           >
             <Text style={styles.closeButtonText}>Kapat</Text>
@@ -85,7 +102,6 @@ const styles = StyleSheet.create({
   },
   modal: {
     width: '85%',
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 16,
     elevation: 10,
@@ -96,48 +112,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
     textAlign: 'center',
+    fontFamily: 'Orbitron-Bold',
   },
   label: {
     fontWeight: 'bold',
     marginTop: 10,
+    fontSize: 14,
+  },
+  value: {
+    marginBottom: 8,
+    fontSize: 14,
   },
   panoContainer: {
-    backgroundColor: '#f1f1f1',
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
   },
-  
   urlText: {
-    color: '#007AFF',
     fontSize: 14,
     marginBottom: 6,
     textDecorationLine: 'underline',
   },
-  value: {
-    marginBottom: 8,
-  },
-  url: {
-    color: '#007AFF',
-    marginBottom: 10,
-    textDecorationLine: 'underline',
-    fontSize: 13,
-  },
   copyButton: {
-    backgroundColor: '#4CAF50',
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 10,
   },
   copyButtonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
   closeButton: {
-    backgroundColor: '#aaa',
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -145,9 +151,14 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: '#fff',
+    fontWeight: 'bold',
   },
   member: {
-    fontSize: 15,
+    fontSize: 14,
+  },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 2,
   },
 });

@@ -3,13 +3,14 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
   TouchableOpacity,
   Modal,
   TextInput,
 } from 'react-native';
 import { LobbyContext } from '../context/LobbyContext';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import createLobbyStyles from '../components/LobbyStyles'; // Güncellenmiş harici style dosyası
 
 const LobbiesScreen = () => {
   const {
@@ -20,7 +21,8 @@ const LobbiesScreen = () => {
     deleteLobby
   } = useContext(LobbyContext);
   const { user } = useContext(AuthContext);
-
+  const { theme } = useTheme();
+  const styles = createLobbyStyles(theme); // theme'le uyumlu stil
 
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [enteredPassword, setEnteredPassword] = useState('');
@@ -30,14 +32,11 @@ const LobbiesScreen = () => {
     const isJoined = joinedLobby && joinedLobby.id === item.id;
     const isOwner = isJoined && joinedLobby.owner.id === user.id;
 
-
-
-
     return (
       <View style={styles.card}>
         <Text style={styles.title}>{item.gameId} ({item.type})</Text>
-        <Text>👤 {item.owner.email}</Text>
-        <Text>🔒 {item.isPrivate ? 'Şifreli' : 'Herkese Açık'}</Text>
+        <Text style={{ color: theme.subtext }}>👤 {item.owner.email}</Text>
+        <Text style={{ color: theme.subtext }}>🔒 {item.isPrivate ? 'Şifreli' : 'Herkese Açık'}</Text>
 
         {isJoined ? (
           <TouchableOpacity
@@ -62,16 +61,14 @@ const LobbiesScreen = () => {
           </TouchableOpacity>
         )}
 
-{isOwner && (
-  <TouchableOpacity
-    style={styles.deleteButton}
-    onPress={() => deleteLobby(item.id)}
-  >
-    <Text style={styles.buttonText}>Sil</Text>
-  </TouchableOpacity>
-)}
-
-
+        {isOwner && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => deleteLobby(item.id)}
+          >
+            <Text style={styles.buttonText}>Sil</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -84,7 +81,7 @@ const LobbiesScreen = () => {
         data={lobbies}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text>Henüz hiç lobi yok...</Text>}
+        ListEmptyComponent={<Text style={{ color: theme.subtext }}>Henüz hiç lobi yok...</Text>}
         extraData={joinedLobby}
       />
 
@@ -100,6 +97,7 @@ const LobbiesScreen = () => {
             <Text style={styles.modalTitle}>🔐 Şifreli Lobi</Text>
             <TextInput
               placeholder="Lobi şifresi"
+              placeholderTextColor={theme.placeholder}
               secureTextEntry
               value={enteredPassword}
               onChangeText={setEnteredPassword}
@@ -121,70 +119,5 @@ const LobbiesScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  heading: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
-  card: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    elevation: 3,
-  },
-  deleteButton: {
-    marginTop: 10,
-    backgroundColor: '#E53935',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-  joinButton: {
-    marginTop: 10,
-    backgroundColor: '#2196F3',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  leaveButton: {
-    marginTop: 10,
-    backgroundColor: '#FF3B30',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: { color: '#fff', fontWeight: 'bold' },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalBox: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  modalTitle: {
-    fontWeight: 'bold',
-    marginBottom: 10,
-    fontSize: 16,
-  },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    marginBottom: 15,
-    padding: 5,
-  },
-  confirmButton: {
-    backgroundColor: '#2196F3',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-});
 
 export default LobbiesScreen;

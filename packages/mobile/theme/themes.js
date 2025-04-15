@@ -1,27 +1,28 @@
+// theme.js
 export const lightTheme = {
   mode: 'light',
-  background: '#f8f9fa',
-  text: '#212529',
-  subtext: '#6c757d',
+  background: '#f0f7ff',
+  text: '#1a1b2f',
+  subtext: '#5c5f77',
   input: '#ffffff',
-  surface: '#e9ecef',
-  placeholder: '#999',
-  border: '#ced4da',
-  primary: '#007bff', // buton rengi
-  gradient: ['#007bff', '#339af0'], // açık mavi tonlu gradient
-  shadow: '#ccc',
+  surface: '#e0e8f9',
+  placeholder: '#888',
+  border: '#ccd9ff',
+  primary: '#4a90e2',
+  gradient: ['#74ebd5', '#ACB6E5'], // yumuşak açık mavi
+  shadow: '#d0d0ff',
 };
 
 export const darkTheme = {
   mode: 'dark',
-  background: '#121212',
-  text: '#f1f3f5',
-  subtext: '#adb5bd',
-  input: '#1e1e2e',
-  surface: '#2e2e3a',
+  background: '#1c1e2a',
+  text: '#f5f6fa',
+  subtext: '#a0a4b8',
+  input: '#2b2d42',
+  surface: '#323554',
   placeholder: '#666',
-  border: '#444',
-  primary: '#339af0', // buton rengi
-  gradient: ['#339af0', '#1e90ff'], // koyu mavi tonlu gradient
-  shadow: '#000',
+  border: '#444a',
+  primary: '#9c88ff',
+  gradient: ['#9c88ff', '#6e45e2'], // koyu mor ton
+  shadow: '#000000',
 };

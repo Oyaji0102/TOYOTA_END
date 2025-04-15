@@ -3,16 +3,19 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   FlatList,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const ChatScreen = () => {
   const { user } = useContext(AuthContext);
+  const { theme } = useTheme();
+
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
 
@@ -31,18 +34,28 @@ const ChatScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={[styles.container, { backgroundColor: theme.background }]}
     >
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Text style={styles.message}>
-            <Text style={styles.user}>{item.user}:</Text> {item.text}
-          </Text>
+          <View
+            style={[
+              styles.message,
+              { backgroundColor: theme.surface, shadowColor: theme.shadow },
+            ]}
+          >
+            <Text style={[styles.user, { color: theme.primary }]}>
+              {item.user}:
+            </Text>
+            <Text style={[styles.messageText, { color: theme.text }]}>
+              {' '}{item.text}
+            </Text>
+          </View>
         )}
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={{ paddingBottom: 90 }}
       />
 
       <View style={styles.inputRow}>
@@ -50,42 +63,76 @@ const ChatScreen = () => {
           value={message}
           onChangeText={setMessage}
           placeholder="Mesaj yaz..."
-          style={styles.input}
+          placeholderTextColor={theme.placeholder}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.input,
+              color: theme.text,
+              borderColor: theme.border,
+            },
+          ]}
         />
-        <Button title="Gönder" onPress={sendMessage} />
+        <TouchableOpacity onPress={sendMessage} style={[styles.sendButton, { backgroundColor: theme.primary }]}>
+          <Text style={styles.sendButtonText}>Gönder</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
   message: {
-    fontSize: 16,
-    marginVertical: 4,
-    padding: 8,
-    backgroundColor: '#f1f3f5',
-    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+    borderRadius: 12,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   user: {
     fontWeight: 'bold',
-    color: '#007bff',
+    fontFamily: 'Orbitron-Bold',
+    fontSize: 14,
+  },
+  messageText: {
+    fontSize: 15,
   },
   inputRow: {
+    position: 'absolute',
+    bottom: 12,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingTop: 12,
-    paddingBottom: 20,
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
   },
   input: {
     flex: 1,
-    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 12,
-    height: 40,
-    backgroundColor: '#fff',
+    paddingVertical: 8,
+    fontSize: 15,
+  },
+  sendButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
 
